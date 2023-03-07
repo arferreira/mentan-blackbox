@@ -6,23 +6,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Fake data
-type user struct {
-    Id        int     `json:"id"`
-    Username  string  `json:"username"`
-}
 
-// feed the user structure
-var users = []user{
-    {Id: 546, Username: "John"},
-    {Id: 894, Username: "Mary"},
-    {Id: 326, Username: "Jane"},
+type EbookInfoProduct struct {
+    Title         string `json:"title"`
+    Niche         string `json:"niche"`
+    Organization string `json:"organizationId"`
+    Product       string `json:"productId"`
+    Format        string `json:"format"`
 }
 
 
-// GET /users rule
-func getUsers(c *gin.Context) {
-    c.IndentedJSON(http.StatusOK, users)
+func createEbook(c *gin.Context) {
+    title := c.PostForm("title")
+    niche := c.PostForm("niche")
+    organizationID := c.PostForm("organizationId")
+    productID := c.PostForm("productId")
+
+    ebook := EbookInfoProduct{
+        Title:         title,
+        Niche: niche,
+        Organization: organizationID,
+        Product:       productID,
+        Format:        "ebook",
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": ebook})
 }
 
 
@@ -30,15 +38,16 @@ func getUsers(c *gin.Context) {
 
 func main() {
 
-
-
 	router := gin.Default()
 
-	// TODO: define another routes
+
+    // root path
 	router.GET("/", func(c *gin.Context) {
         c.String(200, "The mentan blackbox is running...")
     })
-	router.GET("/users", getUsers)
+
+    // generate ebook route
+    router.POST("/api/v1/blackbox/ebook", createEbook)
 
 	router.Run("localhost:8000")
 }
