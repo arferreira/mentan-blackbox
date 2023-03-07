@@ -1,0 +1,34 @@
+# Binary files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build folders
+build/
+dist/
+
+# IDEs and Editors
+.vscode/
+.idea/
+__pycache__
+*.egg-info/
+*.egg/
+
+# Go files & folders
+/bin/
+/pkg/
+/vendor/
+
+# Logs
+*.log
+log/
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.lo
+*.la
+
+# Folders
+tmp/
