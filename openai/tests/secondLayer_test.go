@@ -1,6 +1,7 @@
 package openai_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -9,10 +10,24 @@ import (
 	"github.com/arferreira/mentan-blackbox/openai"
 )
 
+type EbookInfoProduct struct {
+    Title         string `json:"title"`
+    Niche         string `json:"niche"`
+    Organization string `json:"organizationId"`
+    Product       string `json:"productId"`
+    Format        string `json:"format"`
+}
 
 func TestSendPrompt(t *testing.T) {
+    ebook := EbookInfoProduct{
+        Title:         "A e-book about Golang programming language",
+        Niche: "programming",
+        Organization: "123445678",
+        Product:       "12345678",
+        Format:        "ebook",
+    }
 
-
+    prompt := fmt.Sprintf("Create a ebook for me about %s using this %s", ebook.Niche, ebook.Title)
     err := godotenv.Load()
 
     if err != nil {
@@ -27,7 +42,7 @@ func TestSendPrompt(t *testing.T) {
     }{
         {
             name:       "Test with valid prompt",
-            prompt:     "Hello!",
+            prompt:     prompt,
             wantResult: "{\"document_text\": \"Some response message\"}",
             wantErr:    false,
         },
