@@ -20,7 +20,8 @@ type OpenAiPrompt struct {
     MaxTokens   int     `json:"max_tokens"`
 }
 
-func SendPrompt(prompt string) (string, error) {
+func SecondLayer(prompt string) (string, error) {
+	fmt.Println("Prompt to send for OpenAi: ", prompt)
     apiKey := os.Getenv("OPENAI_API_KEY")
     client := openai.NewClient(apiKey)
     resp, err := client.CreateChatCompletion(
