@@ -100,7 +100,7 @@ func getIntroduction(ebook EbookInfoProduct) (string, error) {
 	return generatePrompt(format, ebook.Title, ebook.Niche)
 }
 
-// getTableOfContents generates a table of contents for an ebook using the given product info.
+// function to generate an ebook introduction
 func generateIntroduction(ctx context.Context, c *gin.Context) {
 	startTime := time.Now()
 
