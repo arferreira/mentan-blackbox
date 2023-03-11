@@ -59,38 +59,81 @@ func generatePrompt(format string, args ...interface{}) (string, error) {
 }
 
 // getChapters generates ebook chapters using OpenAI API with go routine
-func getChapters(ctx context.Context, ebook EbookInfoProduct, ch chan<- string, numConcurrentJobs int) {
-	// create buffered channel for limiting a number of concurrent jobs
-	semaphore := make(chan bool, numConcurrentJobs)
+func getChapters(ctx context.Context, ebook EbookInfoProduct, ch chan<- string) error {
+	// create prompt for OpenAI API call
+	prompt := fmt.Sprintf("Create 10 chapters for the ebook with title '%s' focused in the '%s' niche. I want only the name of the chapters separated by a comma. For example: 1 - Chapter One, 2 - Chapter Two", ebook.Title, ebook.Niche)
 
-	for i := 0; i < 10; i++ {
-
-		semaphore <- true // write to channel - blocking if channel is full
-
-		go func() {
-			defer func() { <-semaphore }() // read from channel
-
-			chapterPrompt := fmt.Sprintf("Create chapter %d for '%s' focused in this '%s' niche.", i+1, ebook.Title, ebook.Niche)
-			fmt.Println("Chapter number: ", i+1)
-			chapterContent, err := openai.SecondLayer(chapterPrompt)
-			if err != nil {
-				log.Printf("[ERROR] failed to generate chapter content for prompt '%s': %v", chapterPrompt, err)
-				return
-			}
-			ch <- chapterContent
-		}()
+	// call OpenAI API to generate chapter titles
+	chapterTitles, err := openai.SecondLayer(prompt)
+	if err != nil {
+		log.Printf("[ERROR] failed to generate chapter content for prompt '%s': %v", prompt, err)
+		return err
 	}
 
-	// wait until all running goroutines finish
-	for i := 0; i < cap(semaphore); i++ {
-		semaphore <- true
+	// split comma-separated string into slice
+	titles := strings.Split(chapterTitles, ",")
+
+	// clean titles (trim spaces)
+	for i := range titles {
+		titles[i] = strings.TrimSpace(titles[i])
 	}
+
+	// check if any titles have errors
+	for i, title := range titles {
+		if strings.Contains(title, "ERR_") {
+			err := fmt.Errorf("failed to generate chapter title: %s", title)
+			log.Printf("[ERROR] %v", err)
+			return err
+		}
+		titles[i] = fmt.Sprintf("%d - %s", i+1, title)
+	}
+
+	// return generated chapter titles through channel
+	ch <- strings.Join(titles, ", ")
+
+	return nil
 }
 
 // getIntroduction generates a short introduction for an ebook using the given product info.
 func getIntroduction(ebook EbookInfoProduct) (string, error) {
-	format := "Create a short introduction for an ebook for me about %s with this %s niche using correct grammar and engaged words."
+	format := "Create a short introduction for an ebook for me about %s with this %s niche using correct grammar and engaged words. "
 	return generatePrompt(format, ebook.Title, ebook.Niche)
+}
+
+// getTableOfContents generates a table of contents for an ebook using the given product info.
+func generateIntroduction(ctx context.Context, c *gin.Context) {
+	startTime := time.Now()
+
+	var data ebookData
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	title := data.Title
+	niche := data.Niche
+	organizationID := data.OrganizationID
+	productID := data.ProductID
+
+	ebook := EbookInfoProduct{
+		Title:        title,
+		Niche:        niche,
+		Organization: organizationID,
+		Product:      productID,
+		Format:       "ebook",
+	}
+
+	introduction, err := getIntroduction(ebook)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate introduction content"})
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"introduction": introduction})
+
+	elapsedSeconds := time.Since(startTime).Seconds()
+	log.Printf("Elapsed time for creating introduction: %f seconds", elapsedSeconds)
 }
 
 // getChaptersContent generates the content for a chapter in an ebook using the given product info and chapter name.
@@ -99,6 +142,47 @@ func getChaptersContent(ebook EbookInfoProduct, chapter string) (string, error) 
 	return generatePrompt(format, ebook.Title, ebook.Niche, chapter)
 }
 
+func getChapterTitles(ctx context.Context, c *gin.Context) {
+
+	var data ebookData
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	title := data.Title
+	niche := data.Niche
+	organizationID := data.OrganizationID
+	productID := data.ProductID
+
+	ebook := EbookInfoProduct{
+		Title:        title,
+		Niche:        niche,
+		Organization: organizationID,
+		Product:      productID,
+		Format:       "ebook",
+	}
+
+	// Use a context with a deadline to cancel long-running operations.
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Get chapter titles.
+	chapterChan := make(chan string, bufferSize)
+	chaptersList := []string{}
+
+	go getChapters(ctx, ebook, chapterChan)
+
+	// Use the channel to receive the generated chapter titles.
+	for chapterTitle := range chapterChan {
+		fmt.Println(chapterTitle)
+		chaptersList = append(chaptersList, chapterTitle)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"chapterTitles": chaptersList})
+}
+
+// createEbook creates an ebook using the given product info.
 func createEbook(ctx context.Context, c *gin.Context) {
 
 	startTime := time.Now()
@@ -145,7 +229,7 @@ func createEbook(ctx context.Context, c *gin.Context) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			getChapters(ctx, ebook, chapterChan, bufferSize)
+			getChapters(ctx, ebook, chapterChan)
 		}()
 	}
 
@@ -251,8 +335,22 @@ func main() {
 		createEbook(ctx, c)
 	}
 
+	generateIntroduction := func(c *gin.Context) {
+		ctx := context.Background()
+		generateIntroduction(ctx, c)
+	}
+
+	getChapterTitles := func(c *gin.Context) {
+		ctx := context.Background()
+		getChapterTitles(ctx, c)
+	}
+
 	// generate ebook route
 	router.POST("/api/v1/blackbox/ebook", createEbook)
+	// generate ebook introduction route
+	router.POST("/api/v1/blackbox/generate-introduction", generateIntroduction)
+	// generate chapters title route
+	router.POST("/api/v1/blackbox/generate-chapters-titles", getChapterTitles)
 
 	port := os.Getenv("PORT")
 	if port == "" {
