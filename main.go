@@ -59,15 +59,15 @@ func generatePrompt(format string, args ...interface{}) (string, error) {
 }
 
 // getChapters generates ebook chapters using OpenAI API with go routine
-func getChapters(ctx context.Context, ebook EbookInfoProduct, ch chan<- string) error {
+func getChapters(ctx context.Context, ebook EbookInfoProduct) (string, error) {
 	// create prompt for OpenAI API call
-	prompt := fmt.Sprintf("Create 10 chapters for the ebook with title '%s' focused in the '%s' niche. I want only the name of the chapters separated by a comma. For example: 1 - Chapter One, 2 - Chapter Two", ebook.Title, ebook.Niche)
+	prompt := fmt.Sprintf("A student wants to learn about a %s, generate 10 modules that a student can use to learn. A module consists of a title, separated by a colon.", ebook.Title)
 
 	// call OpenAI API to generate chapter titles
 	chapterTitles, err := openai.SecondLayer(prompt)
 	if err != nil {
 		log.Printf("[ERROR] failed to generate chapter content for prompt '%s': %v", prompt, err)
-		return err
+		return "error", err
 	}
 
 	// split comma-separated string into slice
@@ -83,15 +83,12 @@ func getChapters(ctx context.Context, ebook EbookInfoProduct, ch chan<- string) 
 		if strings.Contains(title, "ERR_") {
 			err := fmt.Errorf("failed to generate chapter title: %s", title)
 			log.Printf("[ERROR] %v", err)
-			return err
+			return "error", err
 		}
 		titles[i] = fmt.Sprintf("%d - %s", i+1, title)
 	}
 
-	// return generated chapter titles through channel
-	ch <- strings.Join(titles, ", ")
-
-	return nil
+	return strings.Join(titles, " | "), nil
 }
 
 // getIntroduction generates a short introduction for an ebook using the given product info.
@@ -167,19 +164,15 @@ func getChapterTitles(ctx context.Context, c *gin.Context) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	// Get chapter titles.
-	chapterChan := make(chan string, bufferSize)
-	chaptersList := []string{}
-
-	go getChapters(ctx, ebook, chapterChan)
-
-	// Use the channel to receive the generated chapter titles.
-	for chapterTitle := range chapterChan {
-		fmt.Println(chapterTitle)
-		chaptersList = append(chaptersList, chapterTitle)
+	// get chapter titles
+	chaptersList, err := getChapters(ctx, ebook)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate chapter titles"})
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"chapterTitles": chaptersList})
+	c.JSON(http.StatusOK, gin.H{"chapters": chaptersList})
 }
 
 // createEbook creates an ebook using the given product info.
@@ -229,7 +222,7 @@ func createEbook(ctx context.Context, c *gin.Context) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			getChapters(ctx, ebook, chapterChan)
+			getChapters(ctx, ebook)
 		}()
 	}
 
