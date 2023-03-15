@@ -26,6 +26,12 @@ type EbookInfoProduct struct {
 	Format       string `json:"format"`
 }
 
+type Content struct {
+	ChapterTitle string `json:"chapterTitle"`
+	EbookTitle   string `json:"ebookTitle"`
+	EbookNiche   string `json:"ebookNiche"`
+}
+
 type ebookData struct {
 	Title          string `json:"title"`
 	Niche          string `json:"niche"`
@@ -134,9 +140,9 @@ func generateIntroduction(ctx context.Context, c *gin.Context) {
 }
 
 // getChaptersContent generates the content for a chapter in an ebook using the given product info and chapter name.
-func getChaptersContent(ebook EbookInfoProduct, chapter string) (string, error) {
+func getChaptersContent(title string, niche string, chapter string) (string, error) {
 	format := "Teach a student about the below topic and subtopic and by writing multiple paragraphs. The topic is: %s and the subtopic is: %s and the name of the chapter is: %s"
-	return generatePrompt(format, ebook.Title, ebook.Niche, chapter)
+	return generatePrompt(format, title, niche, chapter)
 }
 
 func getChapterTitles(ctx context.Context, c *gin.Context) {
@@ -173,6 +179,29 @@ func getChapterTitles(ctx context.Context, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"chapters": chaptersList})
+}
+
+func getContent(ctx context.Context, c *gin.Context) {
+
+	var data Content
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Use a context with a deadline to cancel long-running operations.
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// get content for each chapter
+	content, err := getChaptersContent(data.ChapterTitle, data.EbookTitle, data.EbookNiche)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate chapter titles"})
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"content": content})
 }
 
 // createEbook creates an ebook using the given product info.
@@ -241,16 +270,16 @@ func createEbook(ctx context.Context, c *gin.Context) {
 	}
 
 	// Generate chapter content for each chapter name.
-	chaptersArray := make([]string, 0, len(chapters))
-	for _, chapter := range chapters {
-		chapterContent, err := getChaptersContent(ebook, chapter)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate chapter content"})
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			return
-		}
-		chaptersArray = append(chaptersArray, chapterContent)
-	}
+	// chaptersArray := make([]string, 0, len(chapters))
+	// for _, chapter := range chapters {
+	// 	chapterContent, err := getChaptersContent(ebook, chapter)
+	// 	if err != nil {
+	// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate chapter content"})
+	// 		fmt.Fprintf(os.Stderr, "%v\n", err)
+	// 		return
+	// 	}
+	// 	chaptersArray = append(chaptersArray, chapterContent)
+	// }
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save the ebook"})
@@ -283,7 +312,7 @@ func createEbook(ctx context.Context, c *gin.Context) {
 		"product":      productID,
 		"format":       "ebook",
 		"introduction": introduction,
-		"chapters":     chaptersArray,
+		// "chapters":     chaptersArray,
 	}
 
 	_, err = docRef.Set(ctx, dataToSave)
@@ -295,7 +324,7 @@ func createEbook(ctx context.Context, c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
 			"introduction": introduction,
-			"chapters":     chaptersArray,
+			// "chapters":     chaptersArray,
 		},
 	})
 
@@ -338,12 +367,19 @@ func main() {
 		getChapterTitles(ctx, c)
 	}
 
+	getContent := func(c *gin.Context) {
+		ctx := context.Background()
+		getContent(ctx, c)
+	}
+
 	// generate ebook route
 	router.POST("/api/v1/blackbox/ebook", createEbook)
 	// generate ebook introduction route
 	router.POST("/api/v1/blackbox/generate-introduction", generateIntroduction)
 	// generate chapters title route
 	router.POST("/api/v1/blackbox/generate-chapters-titles", getChapterTitles)
+	// generate chapters content route
+	router.POST("/api/v1/blackbox/generate-chapters-content", getContent)
 
 	port := os.Getenv("PORT")
 	if port == "" {
