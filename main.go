@@ -51,6 +51,8 @@ func generatePrompt(format string, args ...interface{}) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(format, args...))
 
+	log.Printf("Prompt: %s", sb.String())
+
 	prompt := openai.OpenAiPrompt{
 		Prompt:      sb.String(),
 		Temperature: 1.0,
@@ -67,7 +69,7 @@ func generatePrompt(format string, args ...interface{}) (string, error) {
 // getChapters generates ebook chapters using OpenAI API with go routine
 func getChapters(ctx context.Context, ebook EbookInfoProduct) (string, error) {
 	// create prompt for OpenAI API call
-	prompt := fmt.Sprintf("A student wants to learn about a %s, generate 10 modules that a student can use to learn. A module consists of a title, separated by a colon.", ebook.Title)
+	prompt := fmt.Sprintf("Um estudante quer aprender sobre %s, gere 10 módulos que um estudante possa usar para aprender. Um módulo consiste em um título, separado por uma vírgula.", ebook.Title)
 
 	// call OpenAI API to generate chapter titles
 	chapterTitles, err := openai.SecondLayer(prompt)
@@ -99,7 +101,7 @@ func getChapters(ctx context.Context, ebook EbookInfoProduct) (string, error) {
 
 // getIntroduction generates a short introduction for an ebook using the given product info.
 func getIntroduction(ebook EbookInfoProduct) (string, error) {
-	format := "Create a short introduction for an ebook for me about %s with this %s niche using correct grammar and engaged words. "
+	format := "Crie uma breve introdução para um ebook para mim sobre %s com este nicho %s usando gramática correta e palavras envolventes."
 	return generatePrompt(format, ebook.Title, ebook.Niche)
 }
 
@@ -141,7 +143,7 @@ func generateIntroduction(ctx context.Context, c *gin.Context) {
 
 // getChaptersContent generates the content for a chapter in an ebook using the given product info and chapter name.
 func getChaptersContent(title string, niche string, chapter string) (string, error) {
-	format := "Teach a student about the below topic and subtopic and by writing multiple paragraphs. The topic is: %s and the subtopic is: %s and the name of the chapter is: %s"
+	format := "Ensine um estudante sobre o tópico e sub-tópico abaixo, escrevendo vários parágrafos. O tópico é: %s e o sub-tópico é: %s e o nome do capítulo é: %s"
 	return generatePrompt(format, title, niche, chapter)
 }
 
