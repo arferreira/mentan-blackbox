@@ -1,12 +1,12 @@
 {
   "type": "service_account",
   "project_id": "mentan-ai",
-  "private_key_id": "62e975a02b3770faeb3258bfb17087e77e69f054",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCuU/G2IyRBbJy2\nWQ364BAviJB981C8Nqp/BzcgzoayMgi7EgJGYHIYqw2TZobl+MAWbhpJlZFbLiO9\nAy6zyh7ETcxpX4jgMHktyCaTOQh/upL8ndPRmqQCor0AAZcStnf4aOqI9LYwzIbs\nWLCvXMaDXkCVSCjANniWqL8Z3DMZqBUYLNTPBxYZoWZCVUAahrvvfVR4+s8PEsuv\nYmIbEXVAfdfNvRAy7XTrrZvurdS3aWQMyo4KxrMN+tGnlr4NyExUVYLu7FXXkDYV\n8ZkJp65O70ccpI+B6/R/CPCk24evpSFs7a95e4QO6npGyOCIXd0kRlGS7fjF/DU0\nacAx0KDzAgMBAAECggEABfJIFvHo7TBiwheUkf+tnal3YEx57wmgVDfvSfexgYeS\nY6swF613ht7i1inTpSmQh9NWozbuX+FZh7uBjtFwrjqHI/sFxLvyjjy7EB+Mair3\nk5VgodA4EvzxHHxxZkqCGh+eDHDofA6l9Y7q6/hqrxV6d30gIrpY766u4hdwSMoz\n9oRqqvGwciSZ1UyGtkg1qHXZZCHb3zplkKNw1ZFIqMSliB8Ktup2kmPWnVJgW+QZ\nTO1Ky82/AKmAFbJbkyQ3ivmWFyrWyTFJ1UlV/bceX5/5LMLPcmHFXbRD1e4gikog\n3yTZiPvUcHfoL5sXxBxASaLsKCIlORGVeVNEli2QeQKBgQDt2teS9Km3p9S6hYyW\ngsUFSoZ33wFG1zHCF1cExIQzDoMYehvEJsYQqZl9qJ+jx3V3nE70Wcuyd4vHn9Bf\nHn0Zg7jQHx2GXeOoGpoBcpjh8SHxqXBOojlKlaRGUwjiA2PGHXEsMy6XoE7Ut7W/\n1udimZf60g2f6733jDE8xsk3ewKBgQC7oHXQ14SpEh3AMKH0c2grQl2KyDXhpSdR\nDDhQruMekysYj6C+SCPJKc/Ad4b8DsMs2f+cixIoGyg9e46SEO2PjPnK1L13d2AO\nHcrDYvDI9dbcjUIWBd0tjOgf9lQ5owR5HFRpacIyT043ZKwFW6GbBRMFnNOYU7WP\nt9MP/gzG6QKBgA0VbahKxw8wLzZ3ZC1fUiEhYVY0sShJbBZGHGZJvQ/l63YsOVzH\n2TtPaP8NiIKE1URYF8u/KMJPayP2+YpR7gW6Ri9EluYuQficRf5wZFKBZiGZ9XCN\n4eLlalzn8mQkVZevROtugVCb49o1pMzBsIau9jo41cEHQbLdRlQWhzkDAoGAe20L\nE98yvaXVPGDBqXVhyVNXBby+9TkXrBFF2o2xiqN1birNq175a5O9vvbiLV3ottCR\nfgFeaFO1HPzyxNOt8wjiKbPZD4XQAnlGsVGc5BYUyfGCz8n7vcM70ArTTTcX8jPY\ns5+GyGGzKm1nW/7zSG8GHGMWLtaiUXCzv4l4DkECgYAr/lVjpqtVKZn/QGYfW4A+\nRCRhsRz0nf/qQPgMrvWEBWZWLfoEUsvPyE/evJSqPqTyIaFeXvKj2N+NDrFzL//j\nsGo2GvsMFNaWzluievRSYIfHW961E/BspRILiE1NRmF3plaXM34x2EX1iZpqPNDj\nx8uzzWh3eJVBw5X/lzmK1g==\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-xuuau@mentan-ai.iam.gserviceaccount.com",
+  "private_key_id": "",
+  "private_key": "",
+  "client_email": "",
   "client_id": "105822977267381850229",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-xuuau%40mentan-ai.iam.gserviceaccount.com"
+  "client_x509_cert_url": ""
 }
