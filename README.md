@@ -1,9 +1,5 @@
 # Mentan.ai - Blackbox
 
-## License
-
-This project is licensed under the MIT License. Click [here](LICENSE) for more information.
-
 ## Description
 
 This is a RESTful API built with Golang and Gin that provides endpoints to fetch data about blackboxes. It can also create, update, and delete existing blackboxes.
